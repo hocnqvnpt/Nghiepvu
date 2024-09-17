@@ -39,15 +39,15 @@ select distinct ccbs_user from NV_ussd_202408_CT where manv_hrm is null ;
 
 /* link  ccos.vnpt.vn  vao GQKN -> bao cao thong ke -> bao cao tong hop VTT -> vao sl tiep nhan - sl da xu ly */
 
-update NV_ccos_202408_CT set ma_tb='84'||trim(ma_tb);
+update tuyenngo.SBH_CCOS_202408_CT set ma_tb='84'||trim(ma_tb);
 commit ;
 
-update NV_CCOS_202408_CT a set (a.manv_hrm,a.ten_nv,a.ma_vtcv,a.ten_vtcv,a.ma_to,a.ten_to,a.ma_pb,a.ten_pb)
+update tuyenngo.SBH_CCOS_202408_CT a set (a.manv_hrm,a.ten_nv,a.ma_vtcv,a.ten_vtcv,a.ma_to,a.ten_to,a.ma_pb,a.ten_pb)
                     =(select manv_hrm,ten_nv,ma_vtcv,ten_vtcv,ma_to,ten_to,ma_pb,ten_pb 
                       from ttkd_bsc.nhanvien where user_ccos=a.user_ccos and thang=202408) ;
 commit ;
 
-select * from NV_CCOS_202408_CT where manv_hrm is null ;
+select * from tuyenngo.SBH_CCOS_202408_CT where manv_hrm is null ;
 /* --------------- NGHIEP VU SAU BAN ------------ */
 
 /* NV */
