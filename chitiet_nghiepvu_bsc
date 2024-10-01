@@ -115,15 +115,16 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THUEBAO_ID, KHACHHANG_ID, THANHTOAN_ID, 
 		;
 	/* --------------- BANTHIETBI ------------ 
 		-- Nghiem thu
-		- - theo thue bao*/
-		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-		with tbi as(select a.THANG, ma_tb, MA_KH, TEN_LOAIHD, thuebao_id, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
+		-- theo thue bao
+		-- loai tru trong Nghiep vu LAPMOI*/
+		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, hdkh_id, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
+		with tbi as(select a.THANG, ma_tb, MA_KH, TEN_LOAIHD, thuebao_id, KHACHHANG_ID, hdkh_id, MANV_RA_PCT, NGAY_YC
 									, row_number() over(partition by ma_tb, a.nhanvien_id order by NGAY_YC) rnk
 							from tuyenngo.sbh_202408_CT a
 											join ttkd_bsc.nhanvien nv on a.nhanvien_id = nv.nhanvien_id and nv.thang = 202408
 							where loaihd_id = 15 and tthd_id = 6 and MANV_RA_PCT is not null
 						)
-			select ma_tb, MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID, thuebao_id
+			select ma_tb, MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID, thuebao_id, hdkh_id
 						, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
 			from tbi a
 						join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and a.thang = nv.thang
@@ -195,16 +196,16 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THUEBAO_ID, KHACHHANG_ID, THANHTOAN_ID, 
 	;
 		/* --------------- LAPMOI ------------ 
 		-- Nghiem thu
-		-- theo KH*/
-		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-			with bdk as(select THANG, MA_KH, TEN_LOAIHD, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
-									, row_number() over(partition by MA_KH, nhanvien_id order by NGAY_YC) rnk
+		-- theo thuebao*/
+		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, HDKH_ID, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
+			with tbl as(select THANG, ma_tb, MA_KH, TEN_LOAIHD, KHACHHANG_ID, thuebao_id, HDKH_ID, MANV_RA_PCT, NGAY_YC
+									, row_number() over(partition by ma_tb, nhanvien_id order by NGAY_YC) rnk
 							from tuyenngo.sbh_202408_CT
 							where loaihd_id = 1 and tthd_id = 6 and MANV_RA_PCT is not null
 						)
-			select MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID
+			select ma_tb, MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID, thuebao_id, HDKH_ID
 						, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
-			from bdk a
+			from tbl a
 						join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and a.thang = nv.thang
 			where rnk = 1
 		;
@@ -224,20 +225,21 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THUEBAO_ID, KHACHHANG_ID, THANHTOAN_ID, 
 			where rnk = 1
 			;
 			/* --------------- TAOMOIGOI_DADV ------------ 
-				-- Nghiem thu
-				-- theo KH*/
-			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-					with tly as(select THANG, MA_KH, TEN_LOAIHD, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
-											, row_number() over(partition by MA_KH, nhanvien_id order by NGAY_YC) rnk
+			-- Nghiem thu
+			-- theo theo ma_tb
+			-- loại trùng nghiệp vụ LẮP MỚI*/
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, hdkh_id, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
+					with tly as(select THANG, ma_tb, MA_KH, TEN_LOAIHD, KHACHHANG_ID, thuebao_id, hdkh_id, MANV_RA_PCT, NGAY_YC
+											, row_number() over(partition by thuebao_id, nhanvien_id order by NGAY_YC) rnk
 									from tuyenngo.sbh_202408_CT
-									where loaihd_id = 27 and tthd_id = 6 and MANV_RA_PCT is not null
+									where loaihd_id = 27 and tthd_id = 6  and dichvuvt_id != 2 and MANV_RA_PCT is not null
 								)
-					select MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID
+					select ma_tb, MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID, thuebao_id, hdkh_id
 								, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
 					from tly a
 								join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and a.thang = nv.thang
 					where rnk = 1
-					;
+			;
 			/* --------------- THAYDOIDATCOC ------------ 
 		-- Nghiem thu
 		-- theo thue bao*/
@@ -556,6 +558,24 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THUEBAO_ID, KHACHHANG_ID, THANHTOAN_ID, 
 			from tbl
 			where rnk = 1
 			;
+			--loai trừ các đơn vị khác
+			delete from hocnq_ttkd.ct_bsc_nghiepvu where donvi = 'VTTP';
+			--loại trừ trùng Nghiep vụ LAPDATMOI
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+					where TEN_LOAIHD = 'BANTHIETBI' and a.thang = 202408
+						and exists (select 1 from hocnq_ttkd.ct_bsc_nghiepvu where TEN_LOAIHD = 'LAPDATMOI' and thuebao_id = a.thuebao_id and thang = a.thang)
+						;
+			--loại trừ trùng Nghiep vụ LAPDATMOI
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+					where TEN_LOAIHD = 'TAOMOIGOIDADICHVU' and a.thang = 202408
+						and exists (select 1 from hocnq_ttkd.ct_bsc_nghiepvu where TEN_LOAIHD = 'LAPDATMOI' and thuebao_id = a.thuebao_id and thang = a.thang)
+						;
+			--loại trừ trùng Nghiep vụ khac
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+					where TEN_LOAIHD = 'THUKHAC' and a.thang = 202408
+						and exists (select 1 from hocnq_ttkd.ct_bsc_nghiepvu where TEN_LOAIHD != 'THUKHAC' and ma_kh = a.ma_kh and thang = a.thang)
+			;
+commit;
 select a.*
 from hocnq_ttkd.ct_bsc_nghiepvu a
 where a.thang = 202408 and a.donvi = 'TTKD'
