@@ -3,8 +3,9 @@ from ttkdhcm_ktnv.hcm_vnptpay_ketqua b
 ;
 drop table hocnq_ttkd.ct_bsc_nghiepvu purge;
 select * from hocnq_ttkd.ct_bsc_nghiepvu;
-create table hocnq_ttkd.ct_bsc_nghiepvu as
-select a.THANG, ma_tb, ngay_dky_vi, donvi, ma_nv, ten_nv, ten_to, ten_pb, ma_vtcv, ma_to, ma_pb, cast('VI_PAY' as varchar(20)) loai 
+create table hocnq_ttkd.ct_bsc_nghiepvu as;
+insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB, LOAI, TEN_LOAIHD)
+select a.THANG, ma_tb, ngay_dky_vi, donvi, ma_nv, ten_nv, ten_to, ten_pb, ma_vtcv, ma_to, ma_pb, cast('VI_PAY' as varchar(20)) loai, 'VI_PAY' TEN_LOAIHD
 from ttkdhcm_ktnv.hcm_vnptpay_ketqua a
 			 join ttkd_bsc.nhanvien nv on a.ma_hrm = nv.ma_nv and nv.thang = a.thang
 where ngay_dky_vi between to_date('01/08/2024 00:00:01','dd/mm/yyyy hh24:mi:ss') and to_date('30/08/2024 23:59:59','dd/mm/yyyy hh24:mi:ss') 
@@ -12,8 +13,8 @@ where ngay_dky_vi between to_date('01/08/2024 00:00:01','dd/mm/yyyy hh24:mi:ss')
 
 
 /* ---------- MOBILE MONEY ------------ */
-insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB, LOAI)
-		select a.THANG, ma_tb, ngay_dky_mm, donvi, ma_nv, ten_nv, ten_to, ten_pb, ma_vtcv, ma_to, ma_pb, 'VI_MM' loai 
+insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB, LOAI, TEN_LOAIHD)
+		select a.THANG, ma_tb, ngay_dky_mm, donvi, ma_nv, ten_nv, ten_to, ten_pb, ma_vtcv, ma_to, ma_pb, 'VI_MM' loai, 'VI_MM' TEN_LOAIHD
 		from ttkdhcm_ktnv.hcm_vmoney_ketqua a
 					join ttkd_bsc.nhanvien nv on a.ma_hrm = nv.ma_nv and nv.thang = a.thang
 		where ngay_dky_mm between to_date('01/08/2024 00:00:01','dd/mm/yyyy hh24:mi:ss') and to_date('30/08/2024 23:59:59','dd/mm/yyyy hh24:mi:ss') 
@@ -21,8 +22,8 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV,
 			;
 
 /* --------- APP MYVNPT ------------ */
-insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB, LOAI)
-select a.THANG, ma_tb, ngay_active, donvi, ma_nv, ten_nv, ten_to, ten_pb, ma_vtcv, ma_to, ma_pb, 'APP_VNPT' loai 
+insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB, LOAI, TEN_LOAIHD)
+select a.THANG, ma_tb, ngay_active, donvi, ma_nv, ten_nv, ten_to, ten_pb, ma_vtcv, ma_to, ma_pb, 'APP_VNPT' loai, 'APP_VNPT' TEN_LOAIHD
 from ttkdhcm_ktnv.HCM_VNPTAPP_ACTIVE a
 			join ttkd_bsc.nhanvien nv on a.ma_hrm = nv.ma_nv and nv.thang = a.thang
 where ngay_active between to_date('01/08/2024 00:00:01','dd/mm/yyyy hh24:mi:ss') and to_date('30/08/2024 23:59:59','dd/mm/yyyy hh24:mi:ss')
