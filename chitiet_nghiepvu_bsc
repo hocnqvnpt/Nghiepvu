@@ -556,5 +556,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THUEBAO_ID, KHACHHANG_ID, THANHTOAN_ID, 
 			from tbl
 			where rnk = 1
 			;
-select * from ttkd_bsc.nhanvien where thang = 202408;
+select a.*
+from hocnq_ttkd.ct_bsc_nghiepvu a
+where a.thang = 202408 and a.donvi = 'TTKD'
 commit;
