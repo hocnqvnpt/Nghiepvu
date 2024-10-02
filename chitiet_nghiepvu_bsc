@@ -362,7 +362,40 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THUEBAO_ID, KHACHHANG_ID, THANHTOAN_ID, 
 						join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and a.thang = nv.thang
 			where rnk = 1
 			;
-			/* --------------- CNTTTB CCBS ------------ 
+	/* ---------------ONEBSS CHUYEN DOI LOAI HINH THUE BAO ------------ 
+		-- Nghiem thu
+		-- theo thue bao*/
+	insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
+			with tbl as(select a.THANG, ma_tb, MA_KH, TEN_LOAIHD, thuebao_id, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
+									, row_number() over(partition by ma_tb, a.nhanvien_id order by NGAY_YC) rnk
+							from tuyenngo.sbh_202408_CT a
+											join ttkd_bsc.nhanvien nv on a.nhanvien_id = nv.nhanvien_id and nv.thang = 202408
+							where loaihd_id = 6 and tthd_id = 6 and MANV_RA_PCT is not null
+						)
+			select ma_tb, MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID, thuebao_id
+						, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+			from tbl a
+						join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and a.thang = nv.thang
+			where rnk = 1
+			;
+	/* ---------------ONEBSS - DOISO/ACCOUNT ------------ 
+		-- Nghiem thu
+		-- theo thue bao*/
+	insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
+			with tbl as(select a.THANG, ma_tb, MA_KH, TEN_LOAIHD, thuebao_id, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
+									, row_number() over(partition by ma_tb, a.nhanvien_id order by NGAY_YC) rnk
+							from tuyenngo.sbh_202408_CT a
+											join ttkd_bsc.nhanvien nv on a.nhanvien_id = nv.nhanvien_id and nv.thang = 202408
+							where loaihd_id = 14 and tthd_id = 6 and MANV_RA_PCT is not null
+						)
+			select ma_tb, MA_KH, ngay_yc, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'ONEBSS' loai , KHACHHANG_ID, thuebao_id
+						, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+			from tbl a
+						join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and a.thang = nv.thang
+			where rnk = 1
+			;
+
+	/* --------------- CNTTTB CCBS ------------ 
 		-- Nghiem thu
 		-- theo thue bao
 		-- loai trùng CCBS - Capnhat Danh ba
@@ -601,3 +634,9 @@ select a.*
 from hocnq_ttkd.ct_bsc_nghiepvu a
 where a.thang = 202408 and a.donvi = 'TTKD'
 commit;
+---xuat du lieu test TONG QUAN---
+select LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ma_nv, ten_nv, count(*) sanluong
+  from hocnq_ttkd.ct_bsc_nghiepvu 
+  where thang = 202408 and donvi = 'TTKD'
+  group by LOAI, TEN_LOAIHD, TEN_TO, TEN_PB, ma_nv, ten_nv
+  order by LOAI, TEN_LOAIHD;
