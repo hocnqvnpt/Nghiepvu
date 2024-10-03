@@ -672,9 +672,10 @@ where a.thang = 202408 and a.donvi = 'TTKD'
 ;
 commit;
 ---xuat du lieu test TONG QUAN---
-select LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ma_nv, ten_nv, count(*) sanluong
+select LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv, count(*) sanluong
 			, case when TEN_LOAIHD in ('CHUYENDOILOAIHINHTHUEBAO', 'DOISO/ACCOUNT', 'KHIEUNAI_TIEPNHAN') and loai = 'ONEBSS' then 2 else 1 end khoan
-  from hocnq_ttkd.ct_bsc_nghiepvu 
-  where thang = 202408 and donvi = 'TTKD'
-  group by LOAI, TEN_LOAIHD, TEN_TO, TEN_PB, ma_nv, ten_nv
-  order by LOAI, TEN_LOAIHD;
+  from hocnq_ttkd.ct_bsc_nghiepvu a
+			join ttkd_bsc.nhanvien nv on a.ma_nv = nv.ma_nv and nv.thang = 202408
+  where a.thang = 202408 and a.donvi = 'TTKD'
+  group by LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv
+  order by LOAI, TEN_LOAIHD
