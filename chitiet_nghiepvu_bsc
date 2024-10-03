@@ -634,8 +634,9 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			;
 			--loại trừ trùng CCBS - CNTTTB voi CCBS - CAP NHAT DB
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+--			select * from hocnq_ttkd.ct_bsc_nghiepvu a
 					where TEN_LOAIHD = 'CNTTTB' and 'CCBS' = loai and a.thang = 202408
-						and exists (select 1 from  tuyenngo.sbh_vnp_202408_ct a where ten_loaihd = 'CAP NHAT DB' and 'CCBS' = loai and ma_tb = a.ma_tb)
+						and exists (select * from  tuyenngo.sbh_vnp_202408_ct where ten_loaihd = 'CAP NHAT DB' and ma_tb = a.ma_tb)
 			;
 			--loại trừ trùng ONEBSS - THAYDOIDATCOC voi ONEBSS - NGHIEPVUKHAC
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
