@@ -42,9 +42,9 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (THANG, MA_TB, NGAY_DKY_VI, DONVI, MA_NV,
 /* SMRS vao mail tap doan, VAO  PHAN TICH -> NHOM BAO CAO DOI SIM 4G -> BC CHI TIET DOI SIM 4G - hh24:mi:ss */
 
 
-insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-			select SO_THUE_BAO, 'Doi sim ' ||SO_SIM_CU || '_' || SO_SIM_MOI nghiepvu, to_date(THOI_GIAN_DOI,'dd/mm/yyyy hh24:mi:ss') THOI_GIAN_DOI, 'DOISIM' TEN_LOAIHD, 'USSD' loai
-						, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB)
+			select SO_THUE_BAO, 'Doi sim ' ||SO_SIM_CU || '_' || SO_SIM_MOI nghiepvu, to_date(THOI_GIAN_DOI,'dd/mm/yyyy hh24:mi:ss') THOI_GIAN_DOI, 'DOI SIM' TEN_LOAIHD, 'USSD' loai
+						, nv.thang, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
 			from tuyenngo.SBH_ussd_202408_CT a
 						join ttkd_bsc.nhanvien nv on nv.donvi = 'TTKD' and  a.MA_CTV = nv.ma_nv and nv.thang = 202408
 			where a.MA_CTV is not null 
@@ -419,22 +419,34 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			;
 			/* --------------- CCBS- DANG KY HUY CHUYEN DOI GOI CUOC ------------ 
 				-- Nghiem thu
-				-- theo KH
+				-- theo KH, cập nhật đầu tiên
 				-- ghi 1 lan/ngay
-				-- thieu thông tin MA_KH, doi tuong KH để xử lý trên cùng 1 KH de lọc 100 nghiệp vụ
+				-- thieu thong tin MA_KH, doi tuong KH de xu ly tren cung 1 KH de loc 100 nghiep vu
+				delete from hocnq_ttkd.ct_bsc_nghiepvu where ten_loaihd = 'DANG KY HUY CHUYEN DOI GOI CUOC' and thang = 202408;
 				*/
-			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-					with tbl as(select nv.thang, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
+					with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
 													, row_number() over(partition by MA_KH, a.MANV_RA_PCT, trunc(a.ngay_cn) order by a.ngay_cn) rnk
-													, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+													, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
 										from tuyenngo.sbh_vnp_202408_ct a
-														join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.thang = 202408
-										where TEN_LOAIHD = 'DANG KY HUY CHUYEN DOI GOI CUOC' and MANV_RA_PCT is not null --and ma_kh = '010030778'
+														join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+										where TEN_LOAIHD = 'DANG KY HUY CHUYEN DOI GOI CUOC' and MANV_RA_PCT is not null and nvl(doituong_id, 1) in (1, 25)
 										)
-					select MA_KH, ngay_cn, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'CCBS' loai 
-								, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB
+					select ma_tb, MA_KH, doituong_id, trunc(ngay_cn) ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+								, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
 					from tbl
 					where rnk = 1
+			;
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
+					with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+													, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+										from tuyenngo.sbh_vnp_202408_ct a
+														join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+										where TEN_LOAIHD = 'DANG KY HUY CHUYEN DOI GOI CUOC' and MANV_RA_PCT is not null and nvl(doituong_id, 1) not in (1, 25)
+										)
+					select ma_tb, MA_KH, doituong_id, trunc(ngay_cn) ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+								, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+					from tbl
 			;
 			/* --------------- CCBS - DK NHOM DAI DIEN HUONG CUOC ------------ 
 				-- Nghiem thu
@@ -477,83 +489,131 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			
 			/* --------------- CCBS - DOI SIM ------------ 
 				-- Nghiem thu
-				-- theo MAKH
+				-- theo MAKH, cập nhật đầu tiên
 				--100 nghiep vu trong ngay/KH
-				-- thieu thông tin MA_KH, doi tuong KH để xử lý trên cùng 1 KH de lọc 100 nghiệp vụ
-				-- loai trừ trùng của CCBS - DOI SIM
-				
+				-- thieu thong tin MA_KH, doi tuong KH de xu ly tren cung 1 KH de loc 100 nghiep vu
+				-- loai tru trung cua CCBS - DOI SIM
+				delete from hocnq_ttkd.ct_bsc_nghiepvu where ten_loaihd = 'DOI SIM' and thang = 202408;
 				*/
-			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-			with tbl as(select nv.thang, ma_tb, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
-											, row_number() over(partition by ma_tb, a.MANV_RA_PCT order by a.ngay_cn) rnk
-											, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
-								from tuyenngo.sbh_vnp_202408_ct a
-												join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.thang = 202408
-								where TEN_LOAIHD = 'DOI SIM' and MANV_RA_PCT is not null --and ma_kh = '010030778'
-								)
-			select ma_tb, MA_KH, ngay_cn, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'CCBS' loai 
-						, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB
-			from tbl
-			where rnk = 1
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, DOITUONG_ID, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
+						with tbl as(select nv.thang, ma_tb, MA_KH, DOITUONG_ID, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+														, row_number() over(partition by ma_tb, a.MANV_RA_PCT order by a.ngay_cn) rnk
+														, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+											from tuyenngo.sbh_vnp_202408_ct a
+															join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+											where TEN_LOAIHD = 'DOI SIM' and MANV_RA_PCT is not null and nvl(doituong_id, 1) in (1, 25)
+											)
+						select ma_tb, MA_KH, DOITUONG_ID, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+									, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+						from tbl
+						where rnk = 1
+			;
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, DOITUONG_ID, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
+						with tbl as(select nv.thang, ma_tb, MA_KH, DOITUONG_ID, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+														, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+											from tuyenngo.sbh_vnp_202408_ct a
+															join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+											where TEN_LOAIHD = 'DOI SIM' and MANV_RA_PCT is not null and nvl(doituong_id, 1) not in (1, 25)
+											)
+						select ma_tb, MA_KH, DOITUONG_ID, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+									, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+						from tbl
 			;
 			
 			/* --------------- CCBS - DONG MO DV|0 ------------ 
 				-- Nghiem thu
-				-- theo MAKH
+				-- theo MAKH, cập nhật đầu tiên
 				-- 100 nghiep vu trong ngay/KH
-				-- thieu thông tin MA_KH, doi tuong KH để xử lý trên cùng 1 KH de lọc 100 nghiệp vụ
+				-- thieu thong tin MA_KH, doi tuong KH de xu ly tren cung 1 KH de loc 100 nghiep vu
+				delete from hocnq_ttkd.ct_bsc_nghiepvu where ten_loaihd = 'DONG MO DV|0' and thang = 202408;
 				*/
-			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-			with tbl as(select nv.thang, ma_tb, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
-											, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
-											, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
-								from tuyenngo.sbh_vnp_202408_ct a
-												join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.thang = 202408
-								where TEN_LOAIHD = 'DONG MO DV|0' and MANV_RA_PCT is not null --and ma_kh = '010030778'
-								)
-			select MA_KH, ngay_cn, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'CCBS' loai 
-						, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB
-			from tbl
-			where rnk = 1
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB)
+				with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+												, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
+												, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+									from tuyenngo.sbh_vnp_202408_ct a
+													join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+									where TEN_LOAIHD = 'DONG MO DV|0' and MANV_RA_PCT is not null and nvl(doituong_id, 1) in (1, 25)
+									)
+				select MA_TB, MA_KH, doituong_id, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+							, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+				from tbl
+				where rnk = 1
+			;
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
+					with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+--													, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
+													, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+										from tuyenngo.sbh_vnp_202408_ct a
+														join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+										where TEN_LOAIHD = 'DONG MO DV|0' and MANV_RA_PCT is not null and nvl(doituong_id, 1) not in (1, 25)
+										)
+					select MA_TB, MA_KH, doituong_id, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+								, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+					from tbl
 			;
 			/* --------------- CCBS - DONG MO DV|1 ------------ 
 				-- Nghiem thu
-				-- theo MAKH
+				-- theo MAKH, cập nhật đầu tiên
 				--100 nghiep vu trong ngay/KH
 				-- thieu thông tin MA_KH, doi tuong KH để xử lý trên cùng 1 KH de lọc 100 nghiệp vụ
+				delete from hocnq_ttkd.ct_bsc_nghiepvu where ten_loaihd = 'DONG MO DV|1' and thang = 202408;
 				*/
-		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-			with tbl as(select nv.thang, ma_tb, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
-											, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
-											, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
-								from tuyenngo.sbh_vnp_202408_ct a
-												join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.thang = 202408
-								where TEN_LOAIHD = 'DONG MO DV|1' and MANV_RA_PCT is not null --and ma_kh = '010030778'
-								)
-			select MA_KH, ngay_cn, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'CCBS' loai 
-						, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB
-			from tbl
-			where rnk = 1
+		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB)
+				with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+												, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
+												, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+									from tuyenngo.sbh_vnp_202408_ct a
+													join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+									where TEN_LOAIHD = 'DONG MO DV|1' and MANV_RA_PCT is not null and nvl(doituong_id, 1) in (1, 25)
+									)
+				select MA_TB, MA_KH, doituong_id, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+							, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+				from tbl
+				where rnk = 1
+			;
+		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB)
+				with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+												, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+									from tuyenngo.sbh_vnp_202408_ct a
+													join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+									where TEN_LOAIHD = 'DONG MO DV|1' and MANV_RA_PCT is not null and nvl(doituong_id, 1) not in (1, 25)
+									)
+				select MA_TB, MA_KH, doituong_id, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+							, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB
+				from tbl
 			;
 			
 			/* --------------- CCBS - DONG TRUOC GOI CUOC ------------ 
 				-- Nghiem thu
-				-- theo MAKH
+				-- theo MAKH, cập nhật đâu tiên
 				-- 100 nghiep vu trong ngay/KH
 				-- thieu thông tin MA_KH, doi tuong KH để xử lý trên cùng 1 KH de lọc 100 nghiệp vụ
+				delete from hocnq_ttkd.ct_bsc_nghiepvu where ten_loaihd = 'DONG TRUOC GOI CUOC' and thang = 202408;
 				*/
-			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB)
-			with tbl as(select nv.thang, ma_tb, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
-											, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
-											, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ma_vtcv, nv.ma_to, nv.ma_pb
-								from tuyenngo.sbh_vnp_202408_ct a
-												join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.thang = 202408
-								where TEN_LOAIHD = 'DONG TRUOC GOI CUOC' and MANV_RA_PCT is not null --and ma_kh = '010030778'
-								)
-			select MA_KH, ngay_cn, bo_dau(upper(replace(TEN_LOAIHD, ' ', ''))) TEN_LOAIHD, 'CCBS' loai 
-						, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, MA_VTCV, MA_TO, MA_PB
-			from tbl
-			where rnk = 1
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB)
+						with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+														, row_number() over(partition by MA_KH, a.MANV_RA_PCT order by a.ngay_cn) rnk
+														, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+											from tuyenngo.sbh_vnp_202408_ct a
+															join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+											where TEN_LOAIHD = 'DONG TRUOC GOI CUOC' and MANV_RA_PCT is not null and nvl(doituong_id, 1) in (1, 25)
+											)
+						select ma_tb, MA_KH, doituong_id, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+									, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB
+						from tbl
+						where rnk = 1
+			;
+			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, doituong_id, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB)
+						with tbl as(select nv.thang, ma_tb, MA_KH, doituong_id, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
+														, nv.donvi, nv.ma_nv, nv.ten_nv, nv.ten_to, nv.ten_pb, nv.ten_vtcv, nv.ma_vtcv, nv.ma_to, nv.ma_pb
+											from tuyenngo.sbh_vnp_202408_ct a
+															join ttkd_bsc.nhanvien nv on a.MANV_RA_PCT = nv.ma_nv and nv.donvi = 'TTKD' and nv.thang = 202408
+											where TEN_LOAIHD = 'DONG TRUOC GOI CUOC' and MANV_RA_PCT is not null and nvl(doituong_id, 1) not in (1, 25)
+											)
+						select ma_tb, MA_KH, doituong_id, ngay_cn, TEN_LOAIHD, 'CCBS' loai 
+									, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, ten_vtcv, MA_VTCV, MA_TO, MA_PB
+						from tbl
 			;
 			
 			/* --------------- CCBS - THANH LY/PTOC ------------ 
@@ -672,10 +732,31 @@ where a.thang = 202408 and a.donvi = 'TTKD'
 ;
 commit;
 ---xuat du lieu test TONG QUAN---
-select LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv, count(*) sanluong
-			, case when TEN_LOAIHD in ('CHUYENDOILOAIHINHTHUEBAO', 'DOISO/ACCOUNT', 'KHIEUNAI_TIEPNHAN') and loai = 'ONEBSS' then 2 else 1 end khoan
-  from hocnq_ttkd.ct_bsc_nghiepvu a
+with nv100 as (select ma_nv, LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ten_nv, ma_kh, NGAY_DKY_VI, count(*) sl_nv
+										, case when count(*) < 26 then 0.7
+													when count(*) >= 26 then 3.5 *  trunc(count(*)/101 + 1)
+											else -1
+											end sl
+										--, row_number() over(partition by MA_KH, a.MANV_RA_PCT, trunc(a.ngay_cn) order by a.ngay_cn) rnk
+--										SELECT* 
+							from hocnq_ttkd.ct_bsc_nghiepvu a
+							where TEN_LOAIHD in ('DANG KY HUY CHUYEN DOI GOI CUOC', 'DOI SIM', 'DONG MO DV|0', 'DONG MO DV|1')
+--											and nvl(doituong_id, 1) not in (1, 25) 
+											and a.thang = 202408 and a.donvi = 'TTKD'
+							group by ma_nv, LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ten_nv, ma_kh, NGAY_DKY_VI
+				)
+select LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv, sum(sl) sanluong
+				, case when TEN_LOAIHD in ('CHUYENDOILOAIHINHTHUEBAO', 'DOISO/ACCOUNT', 'KHIEUNAI_TIEPNHAN') and loai = 'ONEBSS' then 2 else 1 end khoan
+from nv100 a
 			join ttkd_bsc.nhanvien nv on a.ma_nv = nv.ma_nv and nv.thang = 202408
-  where a.thang = 202408 and a.donvi = 'TTKD'
-  group by LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv
-  order by LOAI, TEN_LOAIHD
+where TEN_LOAIHD in ('DONG MO DV|1')
+group by LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv;
+union all
+		select LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv, count(*) sanluong
+					, case when TEN_LOAIHD in ('CHUYENDOILOAIHINHTHUEBAO', 'DOISO/ACCOUNT', 'KHIEUNAI_TIEPNHAN') and loai = 'ONEBSS' then 2 else 1 end khoan
+		  from hocnq_ttkd.ct_bsc_nghiepvu a
+					join ttkd_bsc.nhanvien nv on a.ma_nv = nv.ma_nv and nv.thang = 202408
+		  where a.thang = 202408 and a.donvi = 'TTKD'
+							and TEN_LOAIHD not in ('DANG KY HUY CHUYEN DOI GOI CUOC')
+		  group by LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv
+		  order by LOAI, TEN_LOAIHD
