@@ -116,7 +116,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 	 ;
 	 /* --------------- ONEBSS - DAT COC MOI ------------ 
 	-- theo MA_KH
-	-- loại trừ trùng ONEBSS - DAT COC MOI voi ONEBSS - LAPDATMOI, GHTT
+	-- loại trừ trùng ONEBSS - DAT COC MOI voi ONEBSS - LAPDATMOI
 	*/
 	insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
 			with tbl as(select THANG, MA_KH, TEN_LOAIHD, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
@@ -293,7 +293,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			-- loại trùng nghiệp vụ LẮP MỚI/GHTT*/
 			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, thuebao_id, hdkh_id, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
 					with tbl as(select THANG, ma_tb, MA_KH, TEN_LOAIHD, KHACHHANG_ID, thuebao_id, hdkh_id, MANV_RA_PCT, NGAY_YC
-											, row_number() over(partition by thuebao_id, nhanvien_id order by NGAY_YC) rnk
+											, row_number() over(partition by ma_kh, nhanvien_id order by NGAY_YC) rnk
 									from tuyenngo.sbh_202408_CT
 									where loaihd_id = 27 and tthd_id = 6  and dichvuvt_id != 2 and MANV_RA_PCT is not null
 								)
@@ -340,7 +340,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			/* --------------- ONEBSS - THAYDOI GOIDADICHVU ------------ 
 			-- Nghiem thu
 			-- theo kh
-			-- loại trừ trùng GHTT ** chưa
+			-- loại trừ trùng GHTT ** 
 		*/
 			insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, KHACHHANG_ID, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
 			with tbl as(select a.THANG, MA_KH, TEN_LOAIHD, thuebao_id, KHACHHANG_ID, MANV_RA_PCT, NGAY_YC
@@ -497,6 +497,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 	/* --------------- CCBS - CAP NHAT DB  ------------ 
 		-- Nghiem thu
 		-- theo thue bao
+		-- loai trừ trùng CCBS - CNTTTB
 		*/
 		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
 			with tbl as(select nv.thang, ma_tb, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
@@ -514,7 +515,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 	/* --------------- CNTTTB CCBS ------------ 
 		-- Nghiem thu
 		-- theo thue bao
-		-- loai trừ trùng CCBS - Capnhat Danh ba
+		-- giữ nguyên 100%
 		*/
 		insert into hocnq_ttkd.ct_bsc_nghiepvu (ma_tb, ma_kh, NGAY_DKY_VI, TEN_LOAIHD, LOAI, THANG, DONVI, MA_NV, TEN_NV, TEN_TO, TEN_PB, TEN_VTCV, MA_VTCV, MA_TO, MA_PB)
 			with tbl as(select nv.thang, ma_tb, MA_KH, TEN_LOAIHD, MANV_RA_PCT, NGAY_CN, USER_CN
@@ -802,6 +803,13 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			;
 			--loai trừ các đơn vị khác
 			delete from hocnq_ttkd.ct_bsc_nghiepvu where donvi = 'VTTP';
+			--loại trừ trùng ONEBSS - DAT COC MOI voi ONEBSS - LAPDATMOI
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+--			select * from hocnq_ttkd.ct_bsc_nghiepvu a
+					where TEN_LOAIHD = 'DAT COC MOI' and 'ONEBSS' = loai and a.thang = 202408
+						and exists (select * from  hocnq_ttkd.ct_bsc_nghiepvu a 
+											where ten_loaihd = 'LAP DAT MOI' and 'ONEBSS' = loai and ma_kh = a.ma_kh and thang = a.thang)
+			;
 			--loại trừ trùng BAN THIET BI vs Nghiep vụ LAPDATMOI
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
 					where TEN_LOAIHD = 'BAN THIET BI' and 'ONEBSS' = loai and a.thang = 202408
@@ -811,6 +819,12 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
 					where TEN_LOAIHD = 'TAO MOI GOI DA DICH VU' and 'ONEBSS' = loai and a.thang = 202408
 						and exists (select 1 from hocnq_ttkd.ct_bsc_nghiepvu where TEN_LOAIHD = 'LAP DAT MOI' and 'ONEBSS' = loai and thuebao_id = a.thuebao_id and thang = a.thang)
+						;
+			--loại trừ trùng THAY DOI GOI DA DICH VU vs Nghiep vụ DATCOC
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+--			select * from hocnq_ttkd.ct_bsc_nghiepvu a					
+					where TEN_LOAIHD = 'THAY DOI GOI DA DICH VU' and 'ONEBSS' = loai and a.thang = 202408
+						and exists (select * from hocnq_ttkd.ct_bsc_nghiepvu where TEN_LOAIHD = 'DAT COC MOI' and 'ONEBSS' = loai and ma_kh = a.ma_kh and thang = a.thang)
 						;
 			--loại trừ trùng ONEBSS - THUKHAC so với ONEBSS - Nghiep vụ khac
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
@@ -827,11 +841,11 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 					where TEN_LOAIHD = 'DOI SIM' and 'USSD' = loai and a.thang = 202408
 						and exists (select 1 from hocnq_ttkd.ct_bsc_nghiepvu where TEN_LOAIHD = 'DOI SIM' and 'CCBS' = loai and ma_tb = a.ma_tb and thang = a.thang)
 			;
-			--loại trừ trùng CCBS - CNTTTB voi CCBS - CAP NHAT DB
+			--loại trừ trùng CCBS - CAP NHAT DB voi CCBS - CNTTTB
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
 --			select * from hocnq_ttkd.ct_bsc_nghiepvu a
-					where TEN_LOAIHD = 'CNTTTB' and 'CCBS' = loai and a.thang = 202408
-						and exists (select * from  tuyenngo.sbh_vnp_202408_ct where ten_loaihd = 'CAP NHAT DB' and ma_tb = a.ma_tb)
+					where TEN_LOAIHD = 'CAP NHAT DB' and 'CCBS' = loai and a.thang = 202408
+						and exists (select * from  tuyenngo.sbh_vnp_202408_ct where ten_loaihd = 'CNTTTB' and ma_tb = a.ma_tb)
 			;
 			--loại trừ trùng ONEBSS - THAYDOIDATCOC voi ONEBSS - NGHIEPVUKHAC
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
@@ -870,13 +884,7 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 											where ten_loaihd = 'LAP DAT MOI' and 'ONEBSS' = loai and ma_kh = a.ma_kh and thang = a.thang)
 			;
 			
-			--loại trừ trùng ONEBSS - DAT COC MOI voi ONEBSS - LAPDATMOI
-			delete from hocnq_ttkd.ct_bsc_nghiepvu a
---			select * from hocnq_ttkd.ct_bsc_nghiepvu a
-					where TEN_LOAIHD = 'DAT COC MOI' and 'ONEBSS' = loai and a.thang = 202408
-						and exists (select * from  hocnq_ttkd.ct_bsc_nghiepvu a 
-											where ten_loaihd = 'LAP DAT MOI' and 'ONEBSS' = loai and ma_kh = a.ma_kh and thang = a.thang)
-			;
+			
 			--loại trừ trùng CCBS - THUCUOC voi CCBS - NGHIEP VU KHAC
 			delete from hocnq_ttkd.ct_bsc_nghiepvu a
 --			select * from hocnq_ttkd.ct_bsc_nghiepvu a
@@ -890,6 +898,18 @@ insert into hocnq_ttkd.ct_bsc_nghiepvu (MA_TB, NGHIEPVU, NGAY_DKY_VI, TEN_LOAIHD
 					where TEN_LOAIHD = 'THU VUOTNGUONG/TAMTHU CN/THUHO' and 'CCBS' = loai and a.thang = 202408
 						and exists (select 1 from  hocnq_ttkd.ct_bsc_nghiepvu a where ten_loaihd != 'THU VUOTNGUONG/TAMTHU CN/THUHO' and 'CCBS' = loai and ma_tb = a.ma_tb)
 			;
+			--loại trừ trùng CCBS - DONG MO DV|0 voi CCBS - NGHIEP VU KHAC
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+--			select * from hocnq_ttkd.ct_bsc_nghiepvu a
+					where TEN_LOAIHD = 'DONG MO DV|0' and 'CCBS' = loai and a.thang = 202408
+						and exists (select 1 from  hocnq_ttkd.ct_bsc_nghiepvu a where ten_loaihd != 'DONG MO DV|0' and 'CCBS' = loai and ma_tb = a.ma_tb)
+			;
+			--loại trừ trùng CCBS - DONG MO DV|0 voi CCBS - NGHIEP VU KHAC
+			delete from hocnq_ttkd.ct_bsc_nghiepvu a
+--			select * from hocnq_ttkd.ct_bsc_nghiepvu a
+					where TEN_LOAIHD = 'DONG MO DV|1' and 'CCBS' = loai and a.thang = 202408
+						and exists (select 1 from  hocnq_ttkd.ct_bsc_nghiepvu a where ten_loaihd != 'DONG MO DV|1' and 'CCBS' = loai and ma_tb = a.ma_tb)
+			;
 commit;
 select a.*
 from hocnq_ttkd.ct_bsc_nghiepvu a
@@ -898,10 +918,10 @@ where a.thang = 202408 and a.donvi = 'TTKD'
 commit;
 ---xuat du lieu test TONG QUAN---
 with nv100 as (select ma_nv, LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ten_nv, ma_kh, NGAY_DKY_VI, count(*) sl_nv
-										, case when count(*) < 26 then 0.7
-													when count(*) >= 26 then 3.5 *  trunc(count(*)/101 + 1)
+										, case when count(*) < 26 then 1
+													when count(*) >= 26 then trunc(count(*)/101 + 1)
 											else -1
-											end sl
+											end nghiepvu
 										--, row_number() over(partition by MA_KH, a.MANV_RA_PCT, trunc(a.ngay_cn) order by a.ngay_cn) rnk
 --										SELECT* 
 							from hocnq_ttkd.ct_bsc_nghiepvu a
@@ -910,7 +930,7 @@ with nv100 as (select ma_nv, LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ten_nv, ma_kh, NG
 											and a.thang = 202408 and a.donvi = 'TTKD'
 							group by ma_nv, LOAI, TEN_LOAIHD, TEN_PB, TEN_TO, ten_nv, ma_kh, NGAY_DKY_VI
 				)
-select LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv, sum(sl) sanluong
+select LOAI, TEN_LOAIHD, a.TEN_PB, a.TEN_TO, a.ma_nv, a.ten_nv, nv.ten_vtcv, sum(nghiepvu) sanluong
 				, case when TEN_LOAIHD in ('CHUYEN DOI LOAI HINH THUE BAO', 'KHIEU NAI - TIEP NHAN'
 										, 'KHIEU NAI - HOAN THANH', 'BIEN DONG KHAC', 'TIEP NHAN KHAO SAT DAT MOI'
 										, 'TIEP NHAN LAP DAT MOI') and loai = 'ONEBSS' then 2
